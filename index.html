@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)file:///Users/ankidubey/Downloads/fidem-testing-strategy_9.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fidem — Testing Strategy</title>
+<link href="./Fidem — Testing Strategy_files/css2" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080c14;
+    --bg2:       #0d1320;
+    --surface:   #111827;
+    --surface2:  #1a2235;
+    --border:    #1e2d45;
+    --border2:   #243350;
+    --amber:     #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --cyan:      #22d3ee;
+    --cyan-dim:  rgba(34,211,238,0.1);
+    --green:     #34d399;
+    --green-dim: rgba(52,211,153,0.1);
+    --red:       #f87171;
+    --red-dim:   rgba(248,113,113,0.1);
+    --purple:    #a78bfa;
+    --purple-dim:rgba(167,139,250,0.1);
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --muted2:    #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* Radial glow top */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(245,158,11,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .header-left { flex: 1; }
+
+  .fidem-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.3);
+    background: var(--amber-dim);
+    padding: 5px 14px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  .fidem-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: clamp(38px, 5.5vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 14px;
+  }
+
+  .header-sub span { color: var(--cyan); }
+
+  .header-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .hbadge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: 1px solid;
+    text-align: center;
+  }
+
+  .hbadge.shift { color: var(--cyan); border-color: rgba(34,211,238,0.3); background: var(--cyan-dim); }
+  .hbadge.qa   { color: var(--green); border-color: rgba(52,211,153,0.3); background: var(--green-dim); }
+
+  .header-line {
+    margin-top: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--amber) 0%, rgba(245,158,11,0.2) 40%, transparent 100%);
+  }
+
+  /* ─── SECTION ─── */
+  .section {
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+    pointer-events: none;
+    border-radius: 12px;
+  }
+
+  .section-head {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .section-head-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-amber  { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .dot-cyan   { background: var(--cyan);  box-shadow: 0 0 8px var(--cyan); }
+  .dot-green  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot-purple { background: var(--purple);box-shadow: 0 0 8px var(--purple); }
+  .dot-red    { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+
+  .section-head h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .section-body { padding: 28px; }
+
+  /* ─── FLOW ─── */
+  .flow-step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child) .vline {
+    position: absolute;
+    left: 21px;
+    top: 46px;
+    width: 2px;
+    height: calc(100% - 14px);
+    background: linear-gradient(to bottom, var(--border2), transparent);
+  }
+
+  .ficon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ficon.test-preview { border-color: rgba(167,139,250,0.4); background: var(--purple-dim); }
+  .ficon.test-dev     { border-color: rgba(245,158,11,0.4);  background: var(--amber-dim); }
+  .ficon.test-stg     { border-color: rgba(52,211,153,0.4);  background: var(--green-dim); }
+
+  .fbody { padding: 8px 0 28px; }
+
+  .fbody h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 5px;
+    letter-spacing: -0.01em;
+  }
+
+  .fbody p {
+    font-size: 13px;
+    color: var(--muted2);
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  .ttag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 13px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border: 1px solid;
+  }
+
+  .ttag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  .ttag-preview { color: var(--purple); border-color: rgba(167,139,250,0.3); background: var(--purple-dim); }
+  .ttag-preview::before { background: var(--purple); }
+  .ttag-dev     { color: var(--amber);  border-color: rgba(245,158,11,0.3);  background: var(--amber-dim); }
+  .ttag-dev::before  { background: var(--amber); }
+  .ttag-stg     { color: var(--green);  border-color: rgba(52,211,153,0.3);  background: var(--green-dim); }
+  .ttag-stg::before  { background: var(--green); }
+
+  /* ─── ENV CARDS ─── */
+  .env-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .env-card {
+    border-radius: 8px;
+    padding: 18px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .env-card:hover { transform: translateY(-2px); }
+
+  .env-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .env-card.preview::after { background: linear-gradient(90deg, var(--purple), transparent); border-color: rgba(167,139,250,0.3); }
+  .env-card.preview:hover  { border-color: rgba(167,139,250,0.4); }
+  .env-card.dev::after     { background: linear-gradient(90deg, var(--amber), transparent); }
+  .env-card.dev:hover      { border-color: rgba(245,158,11,0.4); }
+  .env-card.stg::after     { background: linear-gradient(90deg, var(--green), transparent); }
+  .env-card.stg:hover      { border-color: rgba(52,211,153,0.4); }
+  .env-card.prod::after    { background: linear-gradient(90deg, var(--red), transparent); }
+  .env-card.prod:hover     { border-color: rgba(248,113,113,0.4); }
+
+  .env-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .env-card.preview .env-name { color: var(--purple); }
+  .env-card.dev     .env-name { color: var(--amber); }
+  .env-card.stg     .env-name { color: var(--green); }
+  .env-card.prod    .env-name { color: var(--red); }
+
+  .env-type {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  .env-card ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+
+  .env-card ul li {
+    font-size: 12px;
+    color: var(--muted2);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .env-card ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--border2);
+    font-size: 10px;
+    top: 1px;
+  }
+
+  /* ─── TABLE ─── */
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr { border-bottom: 1px solid var(--border2); }
+
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 16px;
+    text-align: left;
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted2);
+    border-bottom: 1px solid rgba(30,45,69,0.6);
+    vertical-align: middle;
+    line-height: 1.5;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover td {
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .pill-preview { color: var(--purple); border-color: rgba(167,139,250,0.35); background: var(--purple-dim); }
+  .pill-dev     { color: var(--amber);  border-color: rgba(245,158,11,0.35);  background: var(--amber-dim); }
+  .pill-stg     { color: var(--green);  border-color: rgba(52,211,153,0.35);  background: var(--green-dim); }
+  .pill-prod    { color: var(--red);    border-color: rgba(248,113,113,0.35); background: var(--red-dim); }
+
+  /* ─── WHY NOT SKIP ─── */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .why-card {
+    border-radius: 8px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .why-card:hover {
+    border-color: var(--border2);
+    background: rgba(26,34,53,0.8);
+  }
+
+  .why-emoji {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .why-content {}
+
+  .why-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 5px;
+    letter-spacing: -0.01em;
+  }
+
+  .why-desc {
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.7;
+  }
+
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.25);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .callout-text {
+    font-size: 13px;
+    color: #fbbf24;
+    line-height: 1.7;
+  }
+
+  .callout-text strong {
+    font-weight: 700;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* ─── RULES ─── */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .rule-card {
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .rule-card:hover { border-color: var(--border2); }
+
+  .rule-card::before {
+    content: attr(data-num);
+    position: absolute;
+    bottom: -10px;
+    right: 10px;
+    font-size: 72px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.025);
+    line-height: 1;
+    font-family: 'Outfit', sans-serif;
+    pointer-events: none;
+  }
+
+  .rule-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+
+  .rule-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .rule-desc {
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.7;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    margin-top: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-left {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  .section {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: rise 0.5s ease forwards;
+  }
+
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.12s; }
+  .section:nth-child(3) { animation-delay: 0.19s; }
+  .section:nth-child(4) { animation-delay: 0.26s; }
+  .section:nth-child(5) { animation-delay: 0.33s; }
+
+  .header {
+    opacity: 0;
+    animation: rise 0.5s ease 0s forwards;
+  }
+
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 720px) {
+    .page             { padding: 32px 16px 60px; }
+    .header-inner     { flex-direction: column; }
+    .header-badges    { flex-direction: row; }
+    .env-row          { grid-template-columns: repeat(2, 1fr); }
+    .why-grid         { grid-template-columns: 1fr; }
+    .rules-grid       { grid-template-columns: 1fr; }
+    .section-body     { padding: 20px; }
+    h1                { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="fidem-tag">Fidem Project</div>
+        <h1>Testing<br><em>Strategy</em></h1>
+        <p class="header-sub">
+          <span>PREVIEW</span> → <span>DEV</span> → <span>STG</span> → <span>PROD</span>
+          &nbsp;·&nbsp; Shift-Left QA Model
+        </p>
+      </div>
+      <div class="header-badges">
+        <div class="hbadge shift">Shift-Left QA</div>
+        <div class="hbadge qa">4-Stage Pipeline</div>
+      </div>
+    </div>
+    <div class="header-line"></div>
+  </div>
+
+  <!-- Flow -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-head-dot dot-amber"></div>
+      <h2>Development &amp; Testing Flow</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon">🌿</div>
+        <div class="fbody">
+          <h3>Feature Branch Created</h3>
+          <p>Developer picks up a ticket from the sprint backlog and creates a dedicated feature branch. Work begins in isolation from the main codebase.</p>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon">💻</div>
+        <div class="fbody">
+          <h3>Code Written &amp; Committed</h3>
+          <p>Developer completes the ticket and commits changes to the feature branch.</p>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon">🔍</div>
+        <div class="fbody">
+          <h3>Pull Request Opened → Code Review</h3>
+          <p>PR is raised. Another dev reviews the code and adds comments. Developer addresses all review comments. PR is approved ✅</p>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon test-preview">🟣</div>
+        <div class="fbody">
+          <h3>Testing on Preview</h3>
+          <p>Once PR is approved, QA performs full AC-based feature testing.</p>
+          <span class="ttag ttag-preview">Full AC Testing · QA + PO</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon">🔀</div>
+        <div class="fbody">
+          <h3>Branch Merged → PR Closed</h3>
+          <p>After QA sign-off on Preview, branch is merged into DEV. Preview environment is destroyed. <em style="color: var(--amber); font-size: 12px;">⚠ To be confirmed with Kevin.</em></p>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon test-dev">🟡</div>
+        <div class="fbody">
+          <h3>Smoke Test on DEV</h3>
+          <p>All sprint features are together on DEV. QA runs a lightweight smoke test to catch integration issues — not a full re-test of each feature.</p>
+          <span class="ttag ttag-dev">Smoke Test · Integration Check · QA</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="vline"></div>
+        <div class="ficon test-stg">🟢</div>
+        <div class="fbody">
+          <h3>Full Regression on STG</h3>
+          <p>Stable DEV build promoted to STG. QA runs full regression suite. Bug fixes only — no new features. Sign-off required before PROD.</p>
+          <span class="ttag ttag-stg">Full Regression · Release Readiness · Nick</span>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="ficon">🚀</div>
+        <div class="fbody">
+          <h3>Deploy to PROD</h3>
+          <p>After STG sign-off, release is deployed. Team monitors logs, error tracking, and user feedback.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Environment Responsibilities -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-head-dot dot-cyan"></div>
+      <h2>Environment Responsibilities</h2>
+    </div>
+    <div class="section-body">
+      <div class="env-row">
+        <div class="env-card preview">
+          <div class="env-name">Preview</div>
+          <div class="env-type">Feature Isolation</div>
+          <ul>
+            <li>Triggered by PR approval</li>
+            <li>Per-feature, isolated URL</li>
+            <li>Full AC verification</li>
+            <li>QA + PO sign-off</li>
+            <li>Destroyed after merge</li>
+          </ul>
+        </div>
+        <div class="env-card dev">
+          <div class="env-name">DEV</div>
+          <div class="env-type">Integration</div>
+          <ul>
+            <li>All sprint features merged</li>
+            <li>Smoke test only</li>
+            <li>Check integration health</li>
+            <li>May be unstable</li>
+          </ul>
+        </div>
+        <div class="env-card stg">
+          <div class="env-name">STG</div>
+          <div class="env-type">Regression</div>
+          <ul>
+            <li>Mirrors PROD closely</li>
+            <li>Full regression suite</li>
+            <li>No new features here</li>
+            <li>Bug fixes only</li>
+            <li>Nick sign-off</li>
+          </ul>
+        </div>
+        <div class="env-card prod">
+          <div class="env-name">PROD</div>
+          <div class="env-type">Live</div>
+          <ul>
+            <li>Real users</li>
+            <li>Monitor only</li>
+            <li>Error tracking active</li>
+            <li>No direct hotfixes</li>
+            <li>Go through STG first</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-head-dot dot-green"></div>
+      <h2>Testing Summary</h2>
+    </div>
+    <div class="section-body" style="padding: 0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Environment</th>
+            <th>Testing Type</th>
+            <th>Done By</th>
+            <th>Goal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-preview">Preview</span></td>
+            <td>Full AC-based feature testing</td>
+            <td>QA + PO</td>
+            <td>Verify the ticket works as specified</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-dev">DEV</span></td>
+            <td>Smoke test only</td>
+            <td>QA</td>
+            <td>Confirm integration didn't break anything</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-stg">STG</span></td>
+            <td>Full regression</td>
+            <td>Nick</td>
+            <td>Release readiness sign-off</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-prod">PROD</span></td>
+            <td>Monitoring only</td>
+            <td>Team</td>
+            <td>Catch live issues early</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Why Not Skip DEV -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-head-dot dot-red"></div>
+      <h2>Why We Cannot Skip DEV Testing</h2>
+    </div>
+    <div class="section-body">
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-emoji">⚡</div>
+          <div class="why-content">
+            <div class="why-title">Integration Conflicts</div>
+            <div class="why-desc">Feature A and B may each work on Preview individually but conflict once merged — shared state, overlapping API calls, or route clashes.</div>
+          </div>
+        </div>
+        <div class="why-card">
+          <div class="why-emoji">🧩</div>
+          <div class="why-content">
+            <div class="why-title">Shared Component Breakage</div>
+            <div class="why-desc">One ticket may modify a reusable component (button, modal, form) that other tickets depend on — invisible on Preview, visible on DEV.</div>
+          </div>
+        </div>
+        <div class="why-card">
+          <div class="why-emoji">🔌</div>
+          <div class="why-content">
+            <div class="why-title">BE / FE Subtask Misalignment</div>
+            <div class="why-desc">BE and FE are merged separately. API contracts can drift — field names or response shapes that only break on full integration.</div>
+          </div>
+        </div>
+        <div class="why-card">
+          <div class="why-emoji">💾</div>
+          <div class="why-content">
+            <div class="why-title">Data Dependency Issues</div>
+            <div class="why-desc">One feature's data changes can affect another feature's flow — a ticket updating user state may break another ticket's logic.</div>
+          </div>
+        </div>
+        <div class="why-card">
+          <div class="why-emoji">🛡️</div>
+          <div class="why-content">
+            <div class="why-title">Keeps STG Clean</div>
+            <div class="why-desc">Skipping DEV smoke testing means integration bugs surface during STG regression — wasting QA effort and delaying the release.</div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text">
+          <strong>Bottom Line</strong>
+          Preview tests features in isolation. DEV tests them together. Skipping DEV means skipping the only place where integration bugs can be caught before they pollute STG and delay your release.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Golden Rules -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-head-dot dot-purple"></div>
+      <h2>Golden Rules</h2>
+    </div>
+    <div class="section-body">
+      <div class="rules-grid">
+        <div class="rule-card" data-num="01">
+          <div class="rule-num">Rule 01</div>
+          <div class="rule-title">Test After PR Approval, Not Before</div>
+          <div class="rule-desc">QA only tests on Preview after the PR is fully approved. Testing on a PR with open comments wastes effort — the code may still change.</div>
+        </div>
+        <div class="rule-card" data-num="02">
+          <div class="rule-num">Rule 02</div>
+          <div class="rule-title">Smoke Test DEV — Never Skip It</div>
+          <div class="rule-desc">DEV gets a smoke test, not a full regression. Features were tested in isolation on Preview — DEV is the only place to catch integration bugs before STG.</div>
+        </div>
+        <div class="rule-card" data-num="03">
+          <div class="rule-num">Rule 03</div>
+          <div class="rule-title">STG Must Mirror PROD</div>
+          <div class="rule-desc">STG should match PROD as closely as possible — same data shape, same configs. If STG passes, PROD should too.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">Fidem Project · Testing Strategy · 2026</div>
+    <div class="footer-right">Shift Left. Test Early.</div>
+  </div>
+
+</div>
+
+
+</body></html>
