@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Left — Sprint Delivery Quality</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0e14;
+    --surface: #12161f;
+    --border: #1e2535;
+    --accent: #00e5a0;
+    --accent2: #4f8aff;
+    --accent3: #ff6b4a;
+    --text: #e4e8f0;
+    --muted: #5a6480;
+    --card: #151a27;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-1 { background: var(--accent); top: -150px; left: -150px; }
+  .glow-2 { background: var(--accent2); bottom: -150px; right: -150px; }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  /* HEADER */
+  header {
+    margin-bottom: 72px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .label {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 7vw, 86px);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  h1 .accent { color: var(--accent); }
+  h1 .dim { color: var(--muted); }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.8;
+    margin-top: 24px;
+  }
+
+  /* PIPELINE FLOW */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 72px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .pipe-stage {
+    flex: 1;
+    min-width: 110px;
+    text-align: center;
+    position: relative;
+  }
+
+  .pipe-dot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin: 0 auto 10px;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .pipe-stage:hover .pipe-dot {
+    border-color: var(--accent);
+    background: rgba(0, 229, 160, 0.1);
+    transform: scale(1.15);
+    box-shadow: 0 0 20px rgba(0,229,160,0.25);
+  }
+
+  .pipe-line {
+    position: absolute;
+    top: 22px; left: 50%; right: -50%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--border), var(--accent2));
+    z-index: 0;
+  }
+
+  .pipe-stage:last-child .pipe-line { display: none; }
+
+  .pipe-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* SECTION TITLE */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* CARDS GRID */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2px;
+    margin-bottom: 64px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .card {
+    background: var(--card);
+    padding: 28px 28px 24px;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    animation: fadeUp 0.6s ease both;
+    transition: background 0.25s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover::before { transform: scaleY(1); }
+  .card:hover { background: #181d2c; }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .tag-plan   { background: rgba(79,138,255,0.12); color: var(--accent2); }
+  .tag-dev    { background: rgba(0,229,160,0.1);   color: var(--accent); }
+  .tag-review { background: rgba(255,107,74,0.1);  color: var(--accent3); }
+  .tag-test   { background: rgba(255,200,50,0.1);  color: #ffc832; }
+  .tag-deploy { background: rgba(180,80,255,0.1);  color: #b450ff; }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
+  .card-metric {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .metric-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  /* SHIFT LEFT TIMELINE */
+  .timeline-section {
+    margin-bottom: 64px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2), transparent);
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: border-color 0.25s;
+  }
+
+  .tl-item:hover { border-color: var(--accent); }
+
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -36px; top: 24px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .tl-step {
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .tl-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .tl-desc { font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+  /* METRICS BAR */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 64px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .metric-cell {
+    background: var(--card);
+    padding: 28px 24px;
+    text-align: center;
+    transition: background 0.25s;
+  }
+
+  .metric-cell:hover { background: #181d2c; }
+
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* PRINCIPLES */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 64px;
+  }
+
+  .principle {
+    background: var(--card);
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: background 0.25s;
+  }
+
+  .principle:hover { background: #181d2c; }
+
+  .principle-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    min-width: 36px;
+  }
+
+  .principle-body {}
+
+  .principle-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .principle-desc { font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    animation: fadeUp 1s 0.4s ease both;
+  }
+
+  .footer-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 700px) {
+    .metrics-row { grid-template-columns: repeat(2,1fr); }
+    .principles { grid-template-columns: 1fr; }
+    .pipeline { gap: 0; }
+  }
+  /* STORY LIST */
+  .story-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 64px;
+  }
+
+  .story-item {
+    background: var(--card);
+    padding: 22px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: background 0.25s;
+    border-left: 3px solid transparent;
+  }
+
+  .story-item:hover {
+    background: #181d2c;
+    border-left-color: var(--accent);
+  }
+
+  .story-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 64px;
+  }
+
+  .story-id {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .story-area {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .story-body { flex: 1; }
+
+  .story-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .story-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+
+  .story-ac {
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+
+  .story-user-story {
+    background: rgba(0,229,160,0.05);
+    border: 1px solid rgba(0,229,160,0.15);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .usp-row {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .usp-label {
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 6px;
+    min-width: 80px;
+    display: inline-block;
+  }
+
+  .story-section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  .story-notes {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .story-notes li {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .story-notes li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+
+  .story-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0 4px;
+  }
+
+  .story-ac-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .story-ac-list li {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .story-ac-list li::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 9px;
+    top: 3px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div class="label" style="margin-bottom: 0;">Engineering · Agile Practices</div>
+      <div style="font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--border); padding: 6px 14px;">
+        Client · <span style="color: var(--text);">Agentis Financial LLC</span>
+      </div>
+    </div>
+    <h1>
+      <span class="dim">Shift</span><br>
+      <span class="accent">Left.</span><br>
+      <span class="dim">Ship Right.</span>
+    </h1>
+    <p class="subtitle">
+      A framework for catching issues early, reducing cycle time, and shipping with confidence — every sprint, every time.
+    </p>
+  </header>
+
+  <!-- PIPELINE -->
+  <div class="pipeline">
+    <div class="pipe-stage">
+      <div class="pipe-dot">📋</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Refine</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">🎯</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Plan</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">⚡</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Build</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">🔍</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Review</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">👁️</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Preview</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">🧪</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Test</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">🚀</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Deploy</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-dot">📈</div>
+      <div class="pipe-line"></div>
+      <div class="pipe-label">Monitor</div>
+    </div>
+  </div>
+
+  <!-- CORE PRACTICES -->
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <span class="section-title">Core Practices</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="cards">
+
+    <div class="card" style="animation-delay:0.05s">
+      <span class="card-icon">📐</span>
+      <span class="card-tag tag-plan">Planning</span>
+      <div class="card-title">Smaller, Crystal-Clear Stories</div>
+      <div class="card-desc">Break epics into laser-focused stories with a single, testable outcome. Each story should be completable within 1–2 days, leaving no ambiguity in scope or acceptance criteria.</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.1s">
+      <span class="card-icon">🤝</span>
+      <span class="card-tag tag-plan">Refinement</span>
+      <div class="card-title">Devs Refine with PO &amp; SM</div>
+      <div class="card-desc">Developers actively co-refine sub-tasks alongside the Product Owner and Scrum Master. This ensures technical feasibility, shared understanding, and no hidden surprises mid-sprint.</div>
+      <div class="card-metric"><span class="metric-dot"></span>3-amigos before every story</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.15s">
+      <span class="card-icon">🎯</span>
+      <span class="card-tag tag-plan">Sprint Kick-off</span>
+      <div class="card-title">Start with a Clear Sprint Goal</div>
+      <div class="card-desc">Every sprint opens with a written, agreed-upon goal that the whole team can articulate. This north-star guides prioritisation decisions when the unexpected hits mid-sprint.</div>
+      <div class="card-metric"><span class="metric-dot"></span>Written + visible at all times</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.2s">
+      <span class="card-icon">⚡</span>
+      <span class="card-tag tag-dev">Development</span>
+      <div class="card-title">Faster Implementation</div>
+      <div class="card-desc">Smaller stories mean shallower context-switching and faster flow. Developers can enter deep focus, implement fully, and hand off the same day — eliminating multi-day WIP accumulation.</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.25s">
+      <span class="card-icon">🔀</span>
+      <span class="card-tag tag-review">Code Review</span>
+      <div class="card-title">Small &amp; Mid PRs = Faster Reviews</div>
+      <div class="card-desc">PRs scoped to a single concern are reviewed thoroughly in minutes, not hours. Reviewers stay engaged, catch more issues, and approve confidently — no rubber-stamping of 800-line diffs.</div>
+      <div class="card-metric"><span class="metric-dot"></span>Target: &lt;500 lines per PR</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.3s">
+      <span class="card-icon">🧪</span>
+      <span class="card-tag tag-test">Testing</span>
+      <div class="card-title">Early Testing via Preview Envs</div>
+      <div class="card-desc">Once a PR is reviewed and the code is stable, it deploys to a preview environment. QA, PO, and designers validate on real, reviewed code — catching issues early before they reach staging.</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.35s">
+      <span class="card-icon">🔁</span>
+      <span class="card-tag tag-deploy">Staging</span>
+      <div class="card-title">Faster, Multiple STG Deployments</div>
+      <div class="card-desc">After preview sign-off, code is promoted to staging where full regression testing runs. Frequent STG deployments keep the environment fresh and give QA a stable, PROD-like surface to test against.</div>
+    </div>
+
+    <div class="card" style="animation-delay:0.4s">
+      <span class="card-icon">🚀</span>
+      <span class="card-tag tag-deploy">Production</span>
+      <div class="card-title">Manual PROD Deployment</div>
+      <div class="card-desc">After regression passes on STG, the team triggers a deliberate manual PROD deployment. The team owns the release decision — intentional, controlled, and confidence-backed by prior testing.</div>
+    </div>
+
+  </div>
+
+  <!-- SHIFT LEFT TIMELINE -->
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <span class="section-title">The Shift Left Sequence</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="timeline-section">
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-step">Phase 1 · Before Sprint</div>
+        <div class="tl-title">Quality-first Refinement</div>
+        <div class="tl-desc">Acceptance criteria written, edge cases discussed, tasks broken down. DoR (Definition of Ready) gates stories from entering the sprint. Automated dependency checks flag blockers before planning day.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-step">Phase 2 · Sprint Day 1</div>
+        <div class="tl-title">Aligned Kick-off &amp; Goal Setting</div>
+        <div class="tl-desc">Team aligns on the sprint goal, stories are assigned with clear ownership. Each dev walks out of planning knowing exactly what "done" looks like for their slice.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-step">Phase 3 · During Sprint</div>
+        <div class="tl-title">Continuous Flow: Code → Review → Preview → Test</div>
+        <div class="tl-desc">Developers submit PRs for review. Once approved and code is stable, it deploys to a preview environment where QA, PO, and designers validate. Testing happens on reviewed code — not raw branches — keeping the feedback loop tight and the signal trustworthy.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-step">Phase 4 · Staging</div>
+        <div class="tl-title">Regression Testing on STG</div>
+        <div class="tl-desc">After preview sign-off, code is promoted to staging where full regression testing runs. STG mirrors PROD closely, giving QA confidence that nothing is broken before release.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-step">Phase 5 · End of Sprint</div>
+        <div class="tl-title">Manual PROD Deployment</div>
+        <div class="tl-desc">Once regression passes on STG, the team triggers a deliberate, manual PROD deployment. Intentional and controlled — the team owns the release decision. Sprint review showcases real shipped value.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ROLLOUT PLAN -->
+  <div class="section-header" style="margin-top: 16px;">
+    <span class="section-num">03</span>
+    <span class="section-title">Our Rollout Plan</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="timeline-section">
+    <div class="timeline">
+
+      <div class="tl-item" style="border-color: var(--accent);">
+        <div class="tl-step" style="color: var(--accent);">Step 1 · Now — Active</div>
+        <div class="tl-title">Start Creating Smaller Stories</div>
+        <div class="tl-desc">The team commits to breaking stories down before they enter the sprint. Each story should have a single, clear outcome that one dev can own end-to-end. This is the highest-leverage change — everything else flows better when the unit of work is small and well-defined.<br><br>
+        <span style="color: var(--accent); font-size: 11px;">✦ &nbsp;What good looks like: stories that can be built, reviewed, and tested within 1–2 days without ambiguity.</span></div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-step">Step 2 · Next Sprint</div>
+        <div class="tl-title">All Devs, PO &amp; SM Refine Together</div>
+        <div class="tl-desc">Once story sizing improves, the full team joins refinement — every dev, the PO, and the SM in the same session. Devs bring technical depth, PO brings priority and context, SM facilitates and removes blockers. No story enters the sprint that the team hasn't collectively understood.<br><br>
+        <span style="color: var(--accent2); font-size: 11px;">✦ &nbsp;What good looks like: zero "surprise" blockers mid-sprint. Every dev could pick up any story.</span></div>
+      </div>
+
+      <div class="tl-item" style="opacity: 0.5;">
+        <div class="tl-step">Step 3 · Following Sprints</div>
+        <div class="tl-title">Layer in the Rest of the Framework</div>
+        <div class="tl-desc">With solid story sizing and shared refinement in place, the team can progressively adopt preview environments, tighten PR discipline, and establish the Code → Review → Preview → STG Regression → PROD flow. Each step builds on the last — don't rush ahead.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STORY BREAKDOWN EXAMPLE -->
+  <div class="section-header" style="margin-top: 16px;">
+    <span class="section-num">04</span>
+    <span class="section-title">Story Breakdown — Real Example</span>
+    <div class="section-line"></div>
+  </div>
+
+  <p style="font-size: 12px; color: var(--muted); margin-bottom: 28px; line-height: 1.8; max-width: 720px;">
+    Below is how one large story — <em style="color: var(--text);">"Approve/Deny Pending Applications via Provenir API"</em> — gets split into 2 independently deliverable stories.
+  </p>
+
+  <div class="story-list">
+
+    <div class="story-item">
+      <div class="story-left">
+        <div class="story-id">S-01</div>
+        <div class="story-area tag-plan">API · Infra</div>
+      </div>
+      <div class="story-body">
+        <div class="story-title">Provenir Status Update API — Endpoint, Validation &amp; Error Handling</div>
+
+        <div class="story-user-story">
+          <div class="usp-row"><span class="usp-label">As a:</span> Fidem administrator</div>
+          <div class="usp-row"><span class="usp-label">I want to:</span> have a secure, documented API endpoint that Provenir can call to submit application status updates</div>
+          <div class="usp-row"><span class="usp-label">So that:</span> status changes are authenticated, validated, and rejected gracefully before any downstream processing begins</div>
+        </div>
+
+        <div class="story-section-label">Description</div>
+        <div class="story-desc">Build the POST endpoint Provenir uses to update application status. Covers API key/secret authentication, Swagger documentation, pre-flight validation checks (email, existing card, SSN duplicate), structured error responses back to Provenir, and blocking any change attempt on already-Approved applications. Failure emails are sent to aress-servicing for every error.</div>
+
+        <div class="story-section-label">Notes / Considerations</div>
+        <ul class="story-notes">
+          <li>SSN duplicate check is behind a feature flag — must handle both enabled and disabled states</li>
+          <li>Failure emails must include API timestamp, LOS ID, and a direct link to the application in CMT</li>
+          <li>Swagger docs and API key/secret management process must be completed before S-02 can begin</li>
+          <li>Already-Approved applications must be blocked regardless of the requested target status</li>
+        </ul>
+
+        <div class="story-divider"></div>
+
+        <div class="story-section-label">Acceptance Criteria</div>
+        <ul class="story-ac-list">
+          <li>Endpoint authenticates via API key/secret and returns 401 for invalid credentials</li>
+          <li>EMAIL_VERIFICATION_FAILED returned when no DbUser found for {productId}-{email}</li>
+          <li>ALREADY_EXISTS returned when user already has a non-null fiservAccountId</li>
+          <li>SSN_DUPLICATE returned when SSN check is enabled and a duplicate is found; flow continues normally when flag is off</li>
+          <li>Any status change request against an Approved application returns a clear error and leaves CMT unchanged</li>
+          <li>Failure email sent to aress-servicing with timestamp, LOS ID, and CMT link for every error case</li>
+          <li>Swagger documentation published and accurate</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="story-item">
+      <div class="story-left">
+        <div class="story-id">S-02</div>
+        <div class="story-area tag-dev">Core Flow</div>
+      </div>
+      <div class="story-body">
+        <div class="story-title">Provenir Status Update API — Approved &amp; Denied Downstream Flows</div>
+
+        <div class="story-user-story">
+          <div class="usp-row"><span class="usp-label">As a:</span> Fidem administrator</div>
+          <div class="usp-row"><span class="usp-label">I want to:</span> have the system automatically complete all downstream account creation and notification steps when an application is approved or denied via Provenir</div>
+          <div class="usp-row"><span class="usp-label">So that:</span> applicants are onboarded correctly without manual intervention and all systems stay in sync</div>
+        </div>
+
+        <div class="story-section-label">Description</div>
+        <div class="story-desc">Implements all downstream processing triggered by a valid status change. For Approved transitions (from Pending or Denied): books the account to Fiserv, stores returned IDs in CMT, creates and transmits PAN 16 to SYW, handles offer codes, and sends the welcome email. For Pending → Denied: updates CMT status only. All failures are logged and escalated. CMT displays the full API call history per application.</div>
+
+        <div class="story-section-label">Figma Design</div>
+        <div class="story-desc" style="color: var(--accent2);">
+          <a href="https://www.figma.com/board/Iwu9jcOCAMSwp9TOQUybTe/Acquisition-Flow-Diagram?node-id=0-1" target="_blank" style="color: var(--accent2); text-decoration: none;">Acquisition Flow Diagram →</a>
+        </div>
+
+        <div class="story-section-label">Notes / Considerations</div>
+        <ul class="story-notes">
+          <li>Denied → Approved must run the exact same flow as Pending → Approved — the starting state is the only difference</li>
+          <li>Offer code handling only applies if the user applied with an offer code; no action if they didn't</li>
+          <li>No email or Fiserv calls for the Denied flow — denial notice is sent via physical mail</li>
+          <li>CMT must always reflect the most accurate completed state even if a downstream step fails mid-flow</li>
+          <li>Depends on S-01 being complete and the API endpoint being live</li>
+        </ul>
+
+        <div class="story-divider"></div>
+
+        <div class="story-section-label">Acceptance Criteria</div>
+        <ul class="story-ac-list">
+          <li>Pending → Approved: CMT status updated to Approved, account booked to Fiserv, Fiserv Account ID / External Customer ID / Affinity ID stored in CMT</li>
+          <li>Pending → Approved: PAN 16 created at Fiserv and securely transmitted to SYW</li>
+          <li>Pending → Approved: applied offer code marked as "Applied", all other offer codes for that user deactivated (only when offer code was used)</li>
+          <li>Pending → Approved: welcome email with required disclosures sent to the applicant</li>
+          <li>Denied → Approved: same outcome as Pending → Approved across all steps</li>
+          <li>Pending → Denied: CMT updated to Denied, no email sent, no Fiserv or SYW calls made</li>
+          <li>Any downstream failure is logged with an error status and a failure email sent to aress-servicing with timestamp, LOS ID, and CMT link</li>
+          <li>CMT API results view shows all calls for an application in order: original submission + every status change (3 entries for Pending→Denied→Approved, 2 for Pending→Approved and Pending→Denied)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ADDITIONAL PRINCIPLES -->
+  <div class="section-header" style="margin-top: 64px;">
+    <span class="section-num">05</span>
+    <span class="section-title">Supporting Principles</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="principles">
+
+    <div class="principle">
+      <div class="principle-num">01</div>
+      <div class="principle-body">
+        <div class="principle-title">Definition of Ready (DoR)</div>
+        <div class="principle-desc">Stories only enter the sprint backlog when they meet the DoR: clear AC, designs attached, dependencies resolved, and estimated. No more vague tickets causing mid-sprint blocking.</div>
+      </div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-num">02</div>
+      <div class="principle-body">
+        <div class="principle-title">Trunk-Based Development</div>
+        <div class="principle-desc">Short-lived branches merged frequently to main. Feature flags decouple deploy from release. Reduces long-lived branch merge hell and enables continuous integration in practice.</div>
+      </div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-num">03</div>
+      <div class="principle-body">
+        <div class="principle-title">Automate the Quality Gates</div>
+        <div class="principle-desc">Linting, formatting, unit tests, coverage thresholds, and security scans run on every commit. Humans review logic and design, not style. CI/CD is the quality safety net, not a release blocker.</div>
+      </div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-num">04</div>
+      <div class="principle-body">
+        <div class="principle-title">Observability from Day One</div>
+        <div class="principle-desc">New features ship with logging, metrics, and alerting wired up. No flying blind post-release. If something breaks in PROD, the team knows within minutes — not after a customer reports it.</div>
+      </div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-num">05</div>
+      <div class="principle-body">
+        <div class="principle-title">Retrospect on Flow Metrics</div>
+        <div class="principle-desc">Track lead time, cycle time, PR review time, and deployment frequency. Surface bottlenecks with data. Retros become improvement sessions, not complaint sessions.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-badge">
+      <span class="live-dot"></span>
+      Sprint Delivery Quality Framework
+    </div>
+    <div>Shift Left · Build Right · Ship Confidently</div>
+  </footer>
+
+</div>
+
+</body>
+</html>
